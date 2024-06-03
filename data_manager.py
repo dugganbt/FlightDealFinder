@@ -1,7 +1,9 @@
 import requests
 from dotenv import load_dotenv
 import os
-from datetime import datetime
+
+from flight_search import FlightSearch
+
 
 # load sheety api variables
 load_dotenv(".env")
@@ -28,11 +30,12 @@ class DataManager:
     def get_data_rows(self):
         return requests.get(url=self.endpoint, headers=self.headers).json()
 
-    def add_data_row(self, city, iata_code, lowest_price):
+    def add_data_row(self, city, lowest_price):
+        # Adds a city to the sheet using just a city name and the lowest desired price
         data = {
             "price":{
                 "city": city.title(),
-                "iataCode": iata_code.title(),
+                "iataCode": self.get_iata_code_for_city(city),
                 "lowestPrice": lowest_price
             }
         }
@@ -47,5 +50,6 @@ class DataManager:
         response.raise_for_status()
 
 
-    def add_iata_code_for_city(self):
-        pass
+    def get_iata_code_for_city(self,city_name):
+        # gets the iata code for the city name entered
+        return FlightSearch().search_iata_code_for_city(city_name)

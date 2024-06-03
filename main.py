@@ -6,4 +6,4 @@ data_manager = DataManager()
 
 # print(data_manager.get_data_rows())
 
-# data_manager.add_data_row(city="Amsterdam",iata_code="AMS", lowest_price=100)
+data_manager.add_data_row(city="Barcelona", lowest_price=100)
