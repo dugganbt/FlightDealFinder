@@ -1,9 +1,10 @@
-import json
-
 import requests
 from dotenv import load_dotenv
 import os
 from datetime import datetime, timedelta
+
+from flight_data import FlightData
+
 
 # load sheety api variables
 load_dotenv(".env")
@@ -26,8 +27,8 @@ class FlightSearch:
         self.access_token = self.get_access_token(access_token_url)
 
     def get_access_token(self, access_token_url):
-        # Access token is needed to make requests to amadeus API
-        # The token expires after 30 minutes
+        """    Access token is needed to make requests to amadeus API
+            the token expires after 30 minutes"""
 
         response = requests.post(
             url=access_token_url,
@@ -45,7 +46,7 @@ class FlightSearch:
 
     def search_iata_code_for_city(self, city_name):
         global AIRPORT_CITY_SEARCH_URL
-        # Given a city name return the IATA code of the closest major airport
+        """Given a city name return the IATA code of the closest major airport."""
 
         headers = {
             "Authorization": f"Bearer {self.access_token}"
@@ -62,8 +63,11 @@ class FlightSearch:
         except IndexError:
             print(f"{city_name} did not return any results from Airport search.")
 
-    def search_cheap_flights(self, origin_city_code="LON", destination_city_code="NYC", time_window_days=180,
+    def search_cheap_flight(self, origin_city_code="LON", destination_city_code="NYC", time_window_days=180,
                              currency="EUR"):
+
+        """Search the cheapest flight for a single connection. Return a FlightData object if connection found,
+        returns 'N/A', if no connection found."""
 
         # Defining the time window to search
         today = datetime.now().today()
@@ -88,17 +92,31 @@ class FlightSearch:
         }
 
         response = requests.get(FLIGHT_OFFERS_URL, headers=headers, params=query)
-        response.raise_for_status()
 
-        return response.json()
+        # Assuming the first flight returned is the cheapest
+        try:
+            cheapest_flight = FlightData(response.json()['data'][0])
+        except IndexError:
+            print(f"No data returned for flights from {origin_city_code} to {destination_city_code}")
+            cheapest_flight = "N/A"
+        except KeyError:
+            print(f"No data returned for flights from {origin_city_code} to {destination_city_code}")
+            cheapest_flight = "N/A"
+
+        return cheapest_flight
+
+    def search_cheap_flights_for_rows(self, destinations_to_check):
+        """Given a list of destinations, iata codes and prices from the data_manager it searches for the cheapest
+        connection. Prints the results"""
+
+        for destination in destinations_to_check:
+            cheapest_connection = self.search_cheap_flight(destination_city_code=destination["iataCode"])
+            if cheapest_connection != "N/A":
+                print(f"Destination: {destination["city"]}, desired price: {destination["lowestPrice"]}, available "
+                      f"price: {cheapest_connection.price}")
 
 
-# example
-flight_search = FlightSearch()
-flight_search.search_cheap_flights()
 
-# TODO: Use the Flight Search API to check for the cheapest flights from tomorrow to 6 months later for all the
-#  cities in the Google Sheet.
 
 # TODO: If the price is lower than the lowest price listed in the Google
 #  Sheet then send an SMS (or WhatsApp Message) to your own number using the Twilio API.
