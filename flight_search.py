@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 from flight_data import FlightData
+from notification_manager import NotificationManager
 
 
 # load sheety api variables
@@ -115,11 +116,15 @@ class FlightSearch:
                 print(f"Destination: {destination["city"]}, desired price: {destination["lowestPrice"]}, available "
                       f"price: {cheapest_connection.price}")
 
-
-
-
-# TODO: If the price is lower than the lowest price listed in the Google
-#  Sheet then send an SMS (or WhatsApp Message) to your own number using the Twilio API.
-
-# TODO: The SMS should include the departure airport IATA code,
-#  destination airport IATA code, flight price and flight dates. e.g.
+                if float(cheapest_connection.price) <= float(destination["lowestPrice"]):
+                    print("Notification sent!")
+                    notifier = NotificationManager()
+                    message = (
+                        f"Low price alert! "
+                        f"Only {cheapest_connection.price} to fly from {cheapest_connection.outbound_departure_airport.strip()} "
+                        f"to {cheapest_connection.outbound_arrival_airport.strip()} "
+                        f"on {cheapest_connection.outbound_departure_datetime}. "
+                        f"Return flight from {cheapest_connection.return_departure_airport.strip()} "
+                        f"on {cheapest_connection.return_departure_datetime}."
+                    )
+                    notifier.send_notification_whatsapp(message_text=message)

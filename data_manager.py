@@ -50,11 +50,3 @@ class DataManager:
     def get_iata_code_for_city(self, city_name):
         # gets the iata code for the city name entered
         return FlightSearch().search_iata_code_for_city(city_name)
-
-
-# example
-# data_manager = DataManager()
-#
-# flight_search = FlightSearch()
-# flight_search.search_cheap_flights_for_rows(data_manager.get_data_rows())
-
